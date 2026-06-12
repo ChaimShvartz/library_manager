@@ -1,4 +1,4 @@
-from base_db import BaseDB
+from database.base_db import BaseDB
 
 class BookDB(BaseDB):
     table_name = 'books'

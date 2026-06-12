@@ -1,4 +1,4 @@
-from db_connection import ConnectionDB
+from database.db_connection import ConnectionDB
 
 class BaseDB:
     table_name= None
