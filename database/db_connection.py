@@ -4,13 +4,14 @@ class ConnectionDB:
 
     @staticmethod
     def connect():
-        return mysql.connector.connect(host='localhost', user='root', password='root', database='library_db')
+        return mysql.connector.connect(host='localhost', user='root',
+         password='root', database='library_db')
     
     @staticmethod
     def get_connection():
         global connection
         if not connection.is_connected():
-            connection = ConnectionDB().connect()
+            connection = ConnectionDB.connect()
         return connection
 
     @staticmethod
@@ -21,18 +22,20 @@ class ConnectionDB:
                         auther VARCHAR(50) NOT NULL,
                         genre ENUM('Fiction', 'Non-Fiction',
                             'Science', 'History', 'Other') NOT NULL,
-                        is_available BOOLEAN DEFAULT TRUE,
-                        borrowed_by_member_id INT DEFAULT NULL) 
+                        is_available BOOLEAN NOT NULL,
+                        borrowed_by_member_id INT) 
                     """
         sql_create_members = """CREATE TABLE IF NOT EXISTS members(
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(50) NOT NULL,
                         email VARCHAR(255) UNIQUE NOT NULL,
-                        is_active BOOLEAN DEFAULT TRUE,
-                        total_borrows INT DEFAULT 0)
+                        is_active BOOLEAN NOT NULL,
+                        total_borrows INT NOT NULL)
                         """
-        with ConnectionDB.get_connection().cursor() as cursor:
+        connection = ConnectionDB.get_connection()
+        with connection.cursor() as cursor:
             cursor.execute(sql_create_books)
             cursor.execute(sql_create_members)
+            connection.commit()
 
 connection = ConnectionDB.connect()
