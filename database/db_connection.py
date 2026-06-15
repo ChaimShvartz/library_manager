@@ -1,30 +1,35 @@
 import mysql.connector
 
 class ConnectionDB:
+    def __init__(self):
+        self.connect()
+        self.create_books_table()
+        self.create_memers_table()
 
-    @staticmethod
-    def connect():
-        return mysql.connector.connect(host='localhost', user='root',
+    def connect(self):
+        self._connection = mysql.connector.connect(host='localhost', user='root',
          password='root', database='library_db')
     
-    @staticmethod
-    def get_connection():
-        global connection
-        if not connection.is_connected():
-            connection = ConnectionDB.connect()
-        return connection
+    @property
+    def connection(self):
+        if not self._connection.is_connected():
+            self.connect()
+        return self._connection
 
-    @staticmethod
-    def create_tables():
+    def create_books_table(self):
         sql_create_books = """CREATE TABLE IF NOT EXISTS books(
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         title VARCHAR(50) NOT NULL,
-                        auther VARCHAR(50) NOT NULL,
+                        author VARCHAR(50) NOT NULL,
                         genre ENUM('Fiction', 'Non-Fiction',
                             'Science', 'History', 'Other') NOT NULL,
                         is_available BOOLEAN NOT NULL,
-                        borrowed_by_member_id INT) 
+                        borrowed_by_member_id INT)
                     """
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql_create_books)
+        
+    def create_memers_table(self):
         sql_create_members = """CREATE TABLE IF NOT EXISTS members(
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(50) NOT NULL,
@@ -32,10 +37,7 @@ class ConnectionDB:
                         is_active BOOLEAN NOT NULL,
                         total_borrows INT NOT NULL)
                         """
-        connection = ConnectionDB.get_connection()
-        with connection.cursor() as cursor:
-            cursor.execute(sql_create_books)
+        with self.connection.cursor() as cursor:
             cursor.execute(sql_create_members)
-            connection.commit()
 
-connection = ConnectionDB.connect()
+db = ConnectionDB()

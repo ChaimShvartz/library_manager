@@ -1,0 +1,4 @@
+2026-06-15 11:50:51,865 | INFO | Loading up the server
+2026-06-15 11:51:09,874 | INFO | http://localhost:8000/members/35 - GET
+2026-06-15 11:51:09,886 | ERROR | Member not found
+2026-06-15 11:53:32,217 | INFO | Shutting down the server

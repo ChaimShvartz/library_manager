@@ -1,56 +1,40 @@
 from database.base_db import BaseDB
 
 class BookDB(BaseDB):
-    table_name = 'books'
     
-    @classmethod
-    def create_book(cls, data:dict) -> int:
+    def create_book(self, data:dict) -> int:
         data['is_available'] = True
-        data['borrowed_by'] = None
-        id = cls.create(data)
-        cls.get_connection().commit()
-        return id
+        data['borrowed_by_member_id'] = None
+        return self.create(data)
 
-    @classmethod
-    def get_all_books(cls) -> list:
-        return cls.get_all()
+    def get_all_books(self) -> list:
+        return self.get_all()
     
-    @classmethod
-    def get_book_by_id(cls, id:int) -> list:
-        return cls.get_by_id(id)
+    def get_book_by_id(self, id:int) -> dict | None:
+        return self.get_by_id(id)
 
-    @classmethod
-    def update_book(cls, id:int, data:dict) -> bool:
-        updated = cls.update(id, data)
-        cls.get_connection().commit()
-        return updated
+    def update_book(self, id:int, data:dict) -> bool:
+        return self.update(id, data)
     
-    @classmethod
-    def set_availability(cls, id:int, val:bool, member_id:int=None) -> bool:
-        data = {"is_available": True, "borrowed_by_member_id": member_id}
-        updated = cls.update(id, data)
-        cls.get_connection().commit()
-        return updated
+    def set_availability(self, id:int, val:bool, member_id:int=None) -> bool:
+        data = {"is_available": val, "borrowed_by_member_id": member_id}
+        return self.update(id, data)
 
-    @classmethod
-    def count_total_books(cls) -> int:
-        return cls.count()
+    def count_total_books(self) -> int:
+        return self.count()
 
-    @classmethod
-    def count_available_books(cls):
-        return cls.count("is_available = TRUE")
+    def count_available_books(self) -> int:
+        return self.count(" WHERE is_available = true")
 
-    @classmethod
-    def count_borrowed_books(cls):
-        return cls.count("is_available = FALSE")
+    def count_borrowed_books(self) -> int:
+        return self.count(" WHERE is_available = false")
 
-    @classmethod
-    def count_by_genre(cls):
-        with cls.get_connection().cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT genre, COUNT(*) AS amount FROM books GROUP BY genre") 
+    def count_by_genre(self) -> list[dict]:
+        with self.connection.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT genre, COUNT(*) AS count FROM books GROUP BY genre") 
             return cursor.fetchall()
 
-    @classmethod
-    def count_active_borrows_by_member(cls, member_id:int):
-        return cls.count(f"borrowed_by_member_id = {member_id}")
+    def count_active_borrows_by_member(self, member_id:int) -> int:
+        return self.count(f" WHERE borrowed_by_member_id = {member_id}")['count']
     
+book_db = BookDB('books')

@@ -1,57 +1,43 @@
-from base_db import BaseDB
+from database.base_db import BaseDB
 
 class MemberDB(BaseDB):
-    table_name = 'members'
 
-    @classmethod
-    def create_member(cls, data:dict):
+    def create_member(self, data:dict) -> int:
         data['is_active'] = True
         data['total_borrows'] = 0
-        id = cls.create(data)
-        cls.get_connection().commit()
-        return id
+        return self.create(data)
 
-    @classmethod
-    def get_all_members(cls):
-        return cls.get_all()
+    def get_all_members(self) -> list[dict]:
+        return self.get_all()
 
-    @classmethod
-    def get_member_by_id(cls, id:int):
-        return cls.get_by_id(id) or None
+    def get_member_by_id(self, id:int) -> dict | None:
+        return self.get_by_id(id)
 
-    @classmethod
-    def update_member(cls, id:int, data:dict):
-        updated = cls.update(id, data)
-        cls.get_connection().commit()
-        return updated
+    def update_member(self, id:int, data:dict) -> bool:
+        return self.update(id, data)
 
-    @classmethod
-    def deactivate_member(cls, id:int):
-        updated = cls.update(id, {"is_active": False})
-        cls.get_connection().commit()
-        return updated
+    def deactivate_member(self, id:int) -> bool:
+        return self.update(id, {"is_active": False})
 
-    @classmethod
-    def activate_member(cls, id:int):
-        updated = cls.update(id, {"is_active": False})
-        cls.get_connection().commit()
-        return updated
+    def activate_member(self, id:int) -> bool:
+        return self.update(id, {"is_active": True})
 
-    @classmethod
-    def increment_borrows(cls, id:int):
-        connection = cls.get_connection()
+    @staticmethod
+    def increment_borrows(id:int) -> bool:
+        connection = __class__().connection
         with connection.cursor() as cursor:
-            cursor.execute(f"""UPDATE books SET total_borrows
-                            = total_borrows + 1 WHERE id = {id}""")
+            cursor.execute("""UPDATE books SET total_borrows
+                            = total_borrows + 1 WHERE id = %s""", (id,))
             connection.commit()
             return cursor.rowcount > 0
 
-    @classmethod
-    def count_active_members(cls):
-        return cls.count("is_active = TRUE")
+    def count_active_members(self) -> int:
+        return self.count(" WHERE is_active = true")
 
-    @classmethod
-    def get_top_member(cls):
-        with cls.get_connection().cursor() as cursor:
-            cursor.execute("SELECT * FROM books ORDER BY total_borrows DESC LIMIT 1")
+    def get_top_member(self) -> list[dict]:
+        with self.connection.cursor(dictionary=True) as cursor:
+            cursor.execute("""SELECT id AS member_id, total_borrows AS borrowed
+            FROM members WHERE total_borrows = (SELECT MAX(total_borrows) FROM books )""")
             return cursor.fetchall()
+        
+member_db = MemberDB('members')
