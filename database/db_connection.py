@@ -1,20 +1,30 @@
 import mysql.connector
+from logs.config import logger
 
 class ConnectionDB:
     def __init__(self):
         self.connect()
-        self.create_books_table()
-        self.create_memers_table()
 
     def connect(self):
         self._connection = mysql.connector.connect(host='localhost', user='root',
-         password='root', database='library_db')
+         password='root')
     
     @property
     def connection(self):
         if not self._connection.is_connected():
+            logger.warning('connection was lost, creating a new one')
             self.connect()
+            self.create_database()
         return self._connection
+
+    def create_database(self):
+        with self.connection.cursor() as cursor:
+            cursor.execute('CREATE DATABASE IF NOT EXISTS library_db')
+            cursor.execute('USE library_db')
+
+    def create_tables(self):
+        self.create_books_table()
+        self.create_memers_table()
 
     def create_books_table(self):
         sql_create_books = """CREATE TABLE IF NOT EXISTS books(
@@ -39,5 +49,9 @@ class ConnectionDB:
                         """
         with self.connection.cursor() as cursor:
             cursor.execute(sql_create_members)
+
+    def close(self):
+        logger.info('closing connection')
+        self.connection.close()
 
 db = ConnectionDB()

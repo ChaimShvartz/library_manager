@@ -24,17 +24,15 @@ class BookDB(BaseDB):
         return self.count()
 
     def count_available_books(self) -> int:
-        return self.count(" WHERE is_available = true")
+        return self.count({'is_available': 1})
 
     def count_borrowed_books(self) -> int:
-        return self.count(" WHERE is_available = false")
+        return self.count({'is_available': 0})
 
-    def count_by_genre(self) -> list[dict]:
-        with self.connection.cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT genre, COUNT(*) AS count FROM books GROUP BY genre") 
-            return cursor.fetchall()
+    def count_by_genre(self, genre:str) -> list[dict]:
+        return self.count({'genre': genre})
 
     def count_active_borrows_by_member(self, member_id:int) -> int:
-        return self.count(f" WHERE borrowed_by_member_id = {member_id}")['count']
+        return self.count({'borrowed_by_member_id': member_id})
     
 book_db = BookDB('books')

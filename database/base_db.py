@@ -39,9 +39,11 @@ class BaseDB:
             connection.commit()
             return cursor.rowcount > 0
         
-    def count(self, condition:str=None):
-        condition = condition or ''
-        sql_cmd = f"SELECT COUNT(*) AS count FROM {self.table_name}" + condition
-        with self.connection.cursor(dictionary=True) as cursor:
-            cursor.execute(sql_cmd)
-            return cursor.fetchone()
+    def count(self, data:dict=None):
+        data = data or {}
+        statements = ' AND '.join(f'{key} = %s' for key in data) 
+        conditions = f' WHERE {statements}' if data else ''
+        sql_cmd = f"SELECT COUNT(*) FROM {self.table_name}" + conditions
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql_cmd, [*data.values()])
+            return cursor.fetchone()[0]

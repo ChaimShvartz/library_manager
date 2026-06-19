@@ -1,49 +1,37 @@
-from pydantic import BaseModel
 from mysql.connector.errors import IntegrityError
+import utils
+from logs.config import logger
 
-class MemberModelCreating(BaseModel):
-    name: str
-    email: str
-
-class MemberModelUpdating(BaseModel):
-    name: str | None = None
-    email: str | None = None
-
-class MemberNotFoundError(Exception):
-    detail = "Member not found"
-
-class EmailNotUniqueError(Exception):
-    detail = "Email not unique"
-
-def get_member_by_id_service(member_db, id:int):
-    member = member_db.get_by_id(id)
-    if member:
-        return member
-    raise MemberNotFoundError
-
-def create_member_srvice(member_db, data:MemberModelCreating):
+def create_member(member_db, data:utils.MemberModelCreating):
     data = data.model_dump()
     try:
         return member_db.create_member(data)
     except IntegrityError:
-        raise EmailNotUniqueError
+        raise utils.EmailNotUniqueError
 
-def update_member_service(member_db, id, data:MemberModelUpdating):
-    get_member_by_id_service(member_db, id)
+def update_member(member_db, id, data:utils.MemberModelUpdating):
+    member = member_db.get_member_by_id(id)
+    if not member:
+        raise utils.MemberNotFoundError
     data = data.model_dump(exclude_unset=True)
     if not data:
-        return False
+        raise ValueError('nothing to update')
+    logger.info('trying tp update the member...')
     try:
-        member_db.update_member(id, data)
+        return member_db.update_member(id, data)
     except IntegrityError:
-        raise EmailNotUniqueError
-    else:
-        return True
+        raise utils.EmailNotUniqueError
 
-def deactivate_member_service(member_db, id):
-    get_member_by_id_service(member_db, id)
+def deactivate_member(member_db, id):
+    member = member_db.get_member_by_id(id)
+    if not member:
+        raise utils.MemberNotFoundError
+    logger.info('trying to deactivate member...')
     return member_db.deactivate_member(id)
 
-def activate_member_service(member_db, id):
-    get_member_by_id_service(member_db, id)
+def activate_member(member_db, id):
+    member = member_db.get_member_by_id(id)
+    if not member:
+        raise utils.MemberNotFoundError
+    logger.info('trying to activate member...')
     return member_db.activate_member(id)

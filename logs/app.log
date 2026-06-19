@@ -1,4 +1,15 @@
-2026-06-15 11:50:51,865 | INFO | Loading up the server
-2026-06-15 11:51:09,874 | INFO | http://localhost:8000/members/35 - GET
-2026-06-15 11:51:09,886 | ERROR | Member not found
-2026-06-15 11:53:32,217 | INFO | Shutting down the server
+2026-06-19 16:57:25,913 | INFO | Loading up the server
+2026-06-19 16:57:55,028 | INFO | /members - POST
+2026-06-19 16:57:55,030 | INFO | trying to create a new member...
+2026-06-19 16:57:55,034 | WARNING | Email not unique
+2026-06-19 16:57:59,397 | INFO | /members - POST
+2026-06-19 16:57:59,399 | INFO | trying to create a new member...
+2026-06-19 16:57:59,457 | INFO | Member created successfully, id = 5
+2026-06-19 16:58:10,724 | INFO | /members/5 - PUT
+2026-06-19 16:58:10,729 | INFO | trying tp update the member...
+2026-06-19 16:58:10,732 | WARNING | Email not unique
+2026-06-19 16:58:14,913 | INFO | /members/5 - PUT
+2026-06-19 16:58:14,918 | INFO | trying tp update the member...
+2026-06-19 16:58:14,940 | INFO | Member updated successfully
+2026-06-19 16:58:29,929 | INFO | closing connection
+2026-06-19 16:58:29,933 | INFO | Shutting down the server

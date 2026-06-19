@@ -1,59 +1,74 @@
 from fastapi import APIRouter, HTTPException
 from database.member_db import member_db
-from services.member_service import *
+import services.member_service as service
+import utils
+from logs.config import logger
 
 router = APIRouter()
 
 @router.get('')
 def get_all_members():
-    return member_db.get_all_members()
+    members = member_db.get_all_members()
+    if members:
+        logger.info(f'returns {len(members)} members')
+    else:
+        logger.warning('No members yet')
+    return {'data': members}
 
 @router.get('/{id}')
 def get_member_by_id(id:int):
-    try:
-        return get_member_by_id_service(member_db, id)
-    except MemberNotFoundError as e:
-        raise HTTPException(404, e.detail)
+    member = member_db.get_member_by_id(id)
+    if not member:
+        raise HTTPException(404, 'Member not found')
+    logger.info('returns the member')
+    return {'data': member}
 
 @router.post('', status_code=201)
-def create_member(data:MemberModelCreating):
+def create_member(data:utils.MemberModelCreating):
+    logger.info('trying to create a new member...')
     try:
-        id = create_member_srvice(member_db, data)
-    except EmailNotUniqueError as e:
+        id = service.create_member(member_db, data)
+    except utils.EmailNotUniqueError as e:
         raise HTTPException(409, e.detail)
-    return {"id": id}
+    logger.info(f'Member created successfully, id = {id}')
+    return {'msg': 'Member created successfully', 'data': {"id": id}}
 
 @router.put('/{id}')
-def update_member(id:int, data:MemberModelUpdating):
+def update_member(id:int, data:utils.MemberModelUpdating):
     try:
-        updated = update_member_service(member_db, id, data)
-    except MemberNotFoundError as e:
+        updated = service.update_member(member_db, id, data)
+    except utils.MemberNotFoundError as e:
         raise HTTPException(404, e.detail)
-    except EmailNotUniqueError as e:
+    except utils.EmailNotUniqueError as e:
         raise HTTPException(409, e.detail)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     else:
-        if updated:
-            return {"msg":"Member updated successfully"}
-        return {"msg":"Nothing updated"}
+        if not updated:
+            raise HTTPException(400, 'Nothing updated')    
+        logger.info('Member updated successfully')
+        return {"msg":"Member updated successfully"}
 
 @router.put('/{id}/deactivate')
 def deactivate_member(id:int):
     try:
-        updating = deactivate_member_service(member_db, id)
-    except MemberNotFoundError as e:
+        updating = service.deactivate_member(member_db, id)
+    except utils.MemberNotFoundError as e:
         raise HTTPException(404, e.detail)
     else:
-        if updating:
-            return {"msg":"Member deactivated successfully"}
-        return {"msg":"Nothing updated"}
+        if not updating:
+            raise HTTPException(400, 'member already inactive')
+        logger.info('Member deactivated successfully')
+        return {"msg":"Member deactivated successfully"}
 
 @router.put('/{id}/activate')
 def activate_member(id:int):
     try:
-        updating = activate_member_service(member_db, id)
-    except MemberNotFoundError as e:
+        updating = service.activate_member(member_db, id)
+    except utils.MemberNotFoundError as e:
         raise HTTPException(404, e.detail)
     else:
-        if updating:
-            return {"msg":"Member activated successfully"}
-        return {"msg":"Nothing updated"}
+        if not updating:
+            raise HTTPException(400, 'member already active')
+        logger.info('Member activated successfully')
+        return {"msg":"Member activated successfully"}

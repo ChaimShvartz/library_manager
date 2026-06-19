@@ -10,21 +10,23 @@ from logs.config import logger
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     logger.info('Loading up the server')
+    db.create_database()
+    db.create_tables()
     yield
+    db.close()
     logger.info('Shutting down the server')
-    db.connection.close()
 
 app = FastAPI(lifespan=lifespan)
 
 @app.middleware('HTTP')
 def middleware(req:Request, next):
-    logger.info(f'{req.url} - {req.method}')
+    logger.info(f'{req.url.path} - {req.method}')
     return next(req)
 
 @app.exception_handler(HTTPException)
 def handle_exception(req, e:HTTPException):
-    logger.error(e.detail)
-    return JSONResponse(e.detail, e.status_code)
+    logger.warning(e.detail)
+    return JSONResponse({'detail': e.detail}, e.status_code)
 
 app.include_router(books_router, prefix='/books', tags=['Books'])
 app.include_router(members_router, prefix='/members', tags=['Members'])
